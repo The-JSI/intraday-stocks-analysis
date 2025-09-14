@@ -18,16 +18,16 @@ def datefind():
             print(f"Invalid date format: {e}")
             continue
 
-        datefind = gapler.loc[gapler['date'] == query, 'symbol']
+        datefind = gapler.loc[gapler['date'] == query, ['symbol','gap_status','close_status']]
         print(datefind if not datefind.empty else f"No stocks found for {query.date()}")
 
                         
 def stockfind(): #also returns the total number of stocks including the query that opened at a gap up or down
     query = input("enter the stock: ").upper()
-    stockfind = gapler.loc[gapler['symbol'] == query, ['date','close_status']]
+    stockfind = gapler.loc[gapler['symbol'] == query, ['date','gap_status','close_status']]
     all_counts = gapler.groupby("date")["symbol"].count().reset_index(name=f"total stocks including {query}")
     result = stockfind.merge(all_counts, on="date", how="left")
-    cols = ['date', f"total stocks including {query}", 'close_status'] #push close_status to the right
+    cols = ['date', f"total stocks including {query}",'gap_status','close_status'] #push close_status to the right
     result = result[cols]
     print(result.to_string(index=False))
 
