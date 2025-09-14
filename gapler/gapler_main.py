@@ -109,9 +109,35 @@ def countfind():  # also returns the stocks that had the required intraday momen
     print()
     print(f"total- {counts}")
 
+def big_movers():
+    gap_choice = input("Stock gap up or down? ").strip().lower()
+    if gap_choice not in ["up", "down"]:
+        print("Invalid choice. Please enter 'up' or 'down'.")
+        return
+
+    close_choice = input("Stock closed green or red? ").strip().lower()
+    if close_choice not in ["green", "red"]:
+        print("Invalid choice. Please enter 'green' or 'red'.")
+        return
+
+    filtered = gapler.loc[(gapler["gap_status"] == gap_choice) & (gapler["close_status"] == close_choice),["date", "symbol"]]
+
+    if filtered.empty:
+        print(f"No stocks found with gap {gap_choice} and closed {close_choice}.")
+        return
+
+    result = (filtered.groupby("date")["symbol"].agg(stocks=list, num_stocks="count").reset_index())
+    total_stocks = result["num_stocks"].sum()
+
+    print(result.to_string(index=False))
+    print(f"\nTotal dates: {len(result)}")
+    print(f"Total stocks with gap {gap_choice} and closed {close_choice}: {total_stocks}")
+
+
 #stockfind()
 #datefind()
 #countfind()
+#big_movers()
 
 #---------------------------------------------------------------------
 #---------------------------------------------------------------------
