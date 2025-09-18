@@ -1,9 +1,10 @@
 import pandas as pd
 
-gapler_url = "https://docs.google.com/spreadsheets/d/1q-GXwfQ7NsgcBU6vYPtDsK5tkef9ndRVTM3qGcORvvY/export?format=csv"
-gapler = pd.read_csv(gapler_url)
+gapler = pd.read_csv("https://docs.google.com/spreadsheets/d/1q-GXwfQ7NsgcBU6vYPtDsK5tkef9ndRVTM3qGcORvvY/export?format=csv")
+all_days = pd.read_csv("https://docs.google.com/spreadsheets/d/1SkkML9xiylt3mij4e68UYTV7UU9bBZoiRRJJc-kDp6g/export?format=csv")
 
 gapler["date"] = pd.to_datetime(gapler["date"], dayfirst=True, errors="coerce")
+all_days["date"] = pd.to_datetime(all_days["date"], dayfirst=True, errors="coerce")
 
 all_list = (gapler.groupby("date")["symbol"].apply(list).reset_index())
 #print(all_list.to_string())
@@ -30,6 +31,7 @@ def stockfind(): #also returns the total number of stocks including the query th
     cols = ['date', f"total stocks including {query}",'gap_status','close_status'] #push close_status to the right
     result = result[cols]
     print(result.to_string(index=False))
+
 
 def countfind():  # also returns the stocks that had the required intraday momentum
     try:
@@ -109,6 +111,7 @@ def countfind():  # also returns the stocks that had the required intraday momen
     print()
     print(f"total- {counts}")
 
+
 def big_movers():
     gap_choice = input("Stock gap up or down? ").strip().lower()
     if gap_choice not in ["up", "down"]:
@@ -134,10 +137,55 @@ def big_movers():
     print(f"Total stocks with gap {gap_choice} and closed {close_choice}: {total_stocks}")
 
 
+def daterange():
+    while True:
+        try:
+            start_str = input("Enter the start date (d/m/yy): ")
+            end_str = input("Enter the end date (d/m/yy): ")
+
+            start_date = pd.to_datetime(start_str, format="%d/%m/%y", errors="raise")
+            end_date = pd.to_datetime(end_str, format="%d/%m/%y", errors="raise")
+        except Exception as e:
+            print(f"Invalid date format: {e}")
+            continue
+
+        if start_date > end_date:
+            print("Start date cannot be after end date.")
+            continue
+
+        # Filter rows within the range from gapler
+        mask = (gapler["date"] >= start_date) & (gapler["date"] <= end_date)
+        filtered = gapler.loc[mask, ["date", "symbol", "gap_status", "close_status"]]
+
+        # Ensure trading days are within range
+        trading_days = pd.to_datetime(all_days["date"]).dt.date
+        trading_days = trading_days[(trading_days >= start_date.date()) & (trading_days <= end_date.date())]
+        trading_days = trading_days.sort_values() # Arranges data from oldest to newest
+
+        if len(trading_days) == 0:
+            print(f"No trading days found between {start_date.date()} and {end_date.date()}")
+            return
+
+        total_count = 0
+
+        # Print day by day
+        for d in trading_days:
+            day_group = filtered[filtered["date"] == pd.to_datetime(d)]
+            if not day_group.empty:
+                print(f"\n{d} ({len(day_group)} stocks):")
+                print(day_group.drop(columns="date").to_string(index=False))
+                total_count += len(day_group)
+            else:
+                print(f"\n{d} (0 stocks):")
+                print("No gapler data for this day")
+
+        print(f"\nTotal stocks: {total_count} across {len(trading_days)} trading dates")
+        break
+        
 #stockfind()
 #datefind()
 #countfind()
 #big_movers()
-
+#daterange()
 #---------------------------------------------------------------------
 #---------------------------------------------------------------------
