@@ -6,9 +6,13 @@ gapler = pd.read_csv("https://docs.google.com/spreadsheets/d/1q-GXwfQ7NsgcBU6vYP
 
 # Normalize dates
 for df in [trading_days, gapler]:
-    df["date"] = pd.to_datetime(df["date"],dayfirst=True, errors="coerce")
+    df["date"] = pd.to_datetime(df["date"], dayfirst=True, errors="coerce")
 
-# Unique sets
+# Keep only trading days up to today
+today = pd.to_datetime("today").normalize()
+trading_days = trading_days[trading_days["date"] <= today]
+
+# Make the days into unique sets
 trading_dates = set(trading_days["date"].unique())
 gapler_dates = set(gapler["date"].unique())
 
